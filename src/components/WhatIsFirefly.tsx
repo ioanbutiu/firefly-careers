@@ -63,7 +63,11 @@ export default function WhatIsFirefly() {
               return (
                 <motion.div
                   key={item.src}
-                  className="absolute inset-0 overflow-hidden rounded-none bg-white p-2 border border-hairline shadow-[0_30px_60px_-30px_rgba(4,16,26,0.25)]"
+                  onClick={onTop ? () => setActive((a) => (a + 1) % faq.length) : undefined}
+                  className={`absolute inset-0 overflow-hidden rounded-none bg-white p-2 border border-hairline shadow-[0_30px_60px_-30px_rgba(4,16,26,0.25)] ${
+                    onTop ? 'cursor-pointer' : ''
+                  }`}
+                  style={{ pointerEvents: onTop ? 'auto' : 'none' }}
                   animate={{
                     y: depth * 18,
                     x: depth * 14,

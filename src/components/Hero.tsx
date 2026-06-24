@@ -19,6 +19,7 @@ export default function Hero() {
   const [paused, setPaused] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
+  const draggingRef = useRef(false);
 
   const setW = itemW * COUNT;
 
@@ -51,9 +52,17 @@ export default function Hero() {
   };
 
   const onDragEnd = (_: unknown, info: PanInfo) => {
+    // keep the dragging flag up briefly so the click fired after a drag is ignored
+    setTimeout(() => (draggingRef.current = false), 0);
     if (!itemW) return;
     const projected = x.get() + info.velocity.x * 0.12; // flick: throw further with velocity
     settle(Math.round(projected / itemW) * itemW);
+  };
+
+  // advance one card toward whichever side was clicked (dir: -1 left, +1 right)
+  const advance = (dir: number) => {
+    if (draggingRef.current || !itemW) return;
+    settle(Math.round(x.get() / itemW) * itemW - dir * itemW);
   };
 
   // gentle auto-advance, paused on hover / interaction
@@ -106,7 +115,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.7 }}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
-          className="btn-accent mt-9"
+          className="btn-accent mt-9 2xl:mb-4"
         >
           Explore open roles
         </motion.a>
@@ -124,6 +133,7 @@ export default function Hero() {
           drag="x"
           dragMomentum={false}
           onPointerDown={() => setPaused(true)}
+          onDragStart={() => (draggingRef.current = true)}
           onDragEnd={onDragEnd}
         >
           {track.map((p) => (
@@ -133,6 +143,7 @@ export default function Hero() {
               idx={p.idx}
               x={x}
               itemW={itemW || 1}
+              onAdvance={advance}
               innerRef={p.idx === 0 ? cardRef : undefined}
             />
           ))}
@@ -151,28 +162,37 @@ function Card({
   idx,
   x,
   itemW,
+  onAdvance,
   innerRef,
 }: {
   person: (typeof track)[number];
   idx: number;
   x: ReturnType<typeof useMotionValue<number>>;
   itemW: number;
+  onAdvance: (dir: number) => void;
   innerRef?: React.Ref<HTMLDivElement>;
 }) {
   // distance of this card's centre from the viewport centre (0 = centered)
   const distance = useTransform(x, (v) => idx * itemW + v);
-  // center: 1 · immediate neighbours: 0.9 · next out: 0.7
+
+  // clicking any off-center card advances one step toward that side
+  const onClick = () => {
+    const d = distance.get();
+    if (Math.abs(d) > itemW * 0.5) onAdvance(Math.sign(d));
+  };
+  // center: 1 · immediate neighbours: 0.9 · 2nd out: 0.7 · 3rd out: 0.5
   const scale = useTransform(
     distance,
-    [-2 * itemW, -itemW, 0, itemW, 2 * itemW],
-    [0.7, 0.9, 1, 0.9, 0.7],
+    [-3 * itemW, -2 * itemW, -itemW, 0, itemW, 2 * itemW, 3 * itemW],
+    [0.5, 0.7, 0.9, 1, 0.9, 0.7, 0.5],
   );
   // push the 0.9 neighbours out (more room next to center) while keeping the
-  // outer 0.7 cards pulled in close to them
+  // outer 0.7 cards pulled in close to them — the 3rd cards out are pulled in
+  // further still so they don't drift away from the 2nd on wide screens
   const pullX = useTransform(
     distance,
-    [-2 * itemW, -itemW, 0, itemW, 2 * itemW],
-    [itemW * 0.09, itemW * -0.025, 0, itemW * 0.025, itemW * -0.09],
+    [-3 * itemW, -2 * itemW, -itemW, 0, itemW, 2 * itemW, 3 * itemW],
+    [itemW * 0.4, itemW * 0.09, itemW * -0.025, 0, itemW * 0.025, itemW * -0.09, itemW * -0.4],
   );
   // active card "zooms out" the person (img at 1.0) while the others stay zoomed
   // in a touch — leaves headroom for the text on the centered card
@@ -182,7 +202,7 @@ function Card({
   const labelY = useTransform(distance, [-itemW * 0.55, 0, itemW * 0.55], [-0, 0, -0]);
 
   return (
-    <div ref={innerRef} className="shrink-0 px-3">
+    <div ref={innerRef} onClick={onClick} className="shrink-0 px-3">
       <motion.div
         style={{ scale, x: pullX, transformOrigin: 'bottom center' }}
         className="relative aspect-[2/3] w-[clamp(220px,25.93vw,440px)] overflow-hidden rounded-[24px] bg-surface-grey"
