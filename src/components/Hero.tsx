@@ -78,41 +78,14 @@ export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-white pt-36 pb-20 md:pt-20">
       <div className="container-page flex flex-col items-center text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
-          className="label-mono mb-7"
-        >
-          Careers
-        </motion.div>
+        <div className="label-mono mb-7">Careers</div>
 
         <h1 className="display-h1 w-full">
-          {'Help build the infrastructure for a safer America'
-            .split(' ')
-            .map((w, i) => (
-              <span key={i} className="inline-block overflow-hidden align-bottom">
-                <motion.span
-                  className="mr-[0.22em] inline-block"
-                  initial={{ y: '110%' }}
-                  animate={{ y: 0 }}
-                  transition={{
-                    duration: 0.8,
-                    ease: [0.16, 1, 0.3, 1],
-                    delay: 0.15 + i * 0.05,
-                  }}
-                >
-                  {w}
-                </motion.span>
-              </span>
-            ))}
+          Help build the infrastructure for a safer America
         </h1>
 
         <motion.a
           href="#roles"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
           whileHover={{ scale: 1.04 }}
           whileTap={{ scale: 0.97 }}
           className="btn-accent mt-9 2xl:mb-4"
